@@ -27,20 +27,43 @@ export async function scrapeArticleContent(url) {
 
     let content = '';
 
+    // Try multiple selectors in order of specificity
     const selectors = [
-      'article .article-content',
+      // SSPAI specific selectors
       'article .content',
-      '.article-body',
+      '.article-content',
       '.post-content',
-      '[class*="article-content"]',
-      '[class*="post-content"]',
+      '.article-body',
+      '.content-body',
+      '.entry-content',
+
+      // Generic article selectors
+      'article .body',
+      'article > div',
+      'main article',
+      '[data-type="article"]',
+
+      // Editor-specific selectors
+      '.ql-editor',
+      '.markdown-body',
+
+      // Wildcard selectors (last resort)
+      '[class*="content"]',
+      '[class*="article"]',
+      '[class*="post"]',
     ];
 
+    // Try each selector and verify content length
     for (const selector of selectors) {
       const element = $(selector);
       if (element.length > 0) {
-        content = element.html();
-        break;
+        const tempContent = element.html();
+        // Only accept if content is substantial (>200 chars)
+        if (tempContent && tempContent.length > 200) {
+          content = tempContent;
+          console.log(`✓ Found content using selector: ${selector}`);
+          break;
+        }
       }
     }
 
@@ -56,18 +79,122 @@ export async function scrapeArticleContent(url) {
       });
     }
 
+    // Fallback 3: Try entire article tag
     if (!content) {
       const article = $('article');
       if (article.length > 0) {
-        content = article.html();
+        const tempContent = article.html();
+        if (tempContent && tempContent.length > 200) {
+          content = tempContent;
+          console.log('✓ Using entire <article> tag');
+        }
+      }
+    }
+
+    // Fallback 4: Try main tag
+    if (!content) {
+      const main = $('main');
+      if (main.length > 0) {
+        const tempContent = main.html();
+        if (tempContent && tempContent.length > 200) {
+          content = tempContent;
+          console.log('✓ Using <main> tag');
+        }
+      }
+    }
+
+    // Fallback 5: Collect all paragraph tags (last resort)
+    if (!content) {
+      const paragraphs = $('p');
+      if (paragraphs.length > 3) {
+        let collected = '';
+        paragraphs.each((_, p) => {
+          collected += $(p).toString();
+        });
+        if (collected.length > 200) {
+          content = collected;
+          console.log(`✓ Collected ${paragraphs.length} paragraphs`);
+        }
       }
     }
 
     if (!content) {
+      console.error('✗ No content found with any selector');
+      console.error(`Debug info for ${url}:`);
+      console.error(`  - <article> tags: ${$('article').length}`);
+      console.error(`  - <main> tags: ${$('main').length}`);
+      console.error(`  - <p> tags: ${$('p').length}`);
+      console.error(`  - divs with "content": ${$('[class*="content"]').length}`);
+      console.error(`  - divs with "article": ${$('[class*="article"]').length}`);
+      console.error(`  - Page title: ${$('title').text()}`);
       throw new Error('Could not find article content');
     }
 
     const $content = cheerio.load(content);
+
+    // Clean up unwanted elements before processing
+    // Remove emoji/reaction buttons (including Vue components)
+    $content('.emoji').remove();
+    $content('.comp__Emoji').remove();
+    $content('[class*="emoji"]').remove();
+    $content('[class*="Emoji"]').remove();
+    // Remove any div with data-v attributes and class containing "emoji"
+    $content('div[class*="emoji"][data-v-]').remove();
+    $content('img[alt*="emoji"]').parent().remove();
+
+    // Remove comment sections
+    $content('.comments').remove();
+    $content('.comment-section').remove();
+    $content('[class*="comment"]').remove();
+
+    // Remove reaction/interaction elements
+    $content('.reactions').remove();
+    $content('.interaction').remove();
+    $content('[class*="reaction"]').remove();
+
+    // Remove ads and promotions
+    $content('.ad').remove();
+    $content('.advertisement').remove();
+    $content('[class*="promo"]').remove();
+
+    // Remove navigation and sidebars
+    $content('nav').remove();
+    $content('.sidebar').remove();
+    $content('.side-bar').remove();
+
+    // Remove social share buttons
+    $content('.share').remove();
+    $content('.social-share').remove();
+    $content('[class*="share"]').remove();
+
+    // Remove author cards and related articles (often at the end)
+    $content('.author-card').remove();
+    $content('.related-articles').remove();
+    $content('[class*="related"]').remove();
+
+    // Remove scripts, styles, and other non-content elements
+    $content('script').remove();
+    $content('style').remove();
+    $content('noscript').remove();
+    $content('iframe').remove(); // Remove embedded iframes (can add back if needed)
+
+    // Remove headers and footers if they got included
+    $content('header').remove();
+    $content('footer').remove();
+
+    // Clean up Vue.js data attributes from all remaining elements
+    $content('*').each((_, el) => {
+      const $el = $content(el);
+      const attrs = Object.keys(el.attribs || {});
+      attrs.forEach(attr => {
+        // Remove Vue data attributes (data-v-xxxxx)
+        if (attr.startsWith('data-v-')) {
+          $el.removeAttr(attr);
+        }
+      });
+    });
+
+    // Process images - replace with proxy URLs
     $content('img').each((_, img) => {
       const $img = $content(img);
       const src = $img.attr('src');
