@@ -11,7 +11,7 @@ app.get('/', (req, res) => {
     service: 'PiRSS - SSPAI Full-Text RSS Feed',
     status: 'running',
     endpoints: {
-      feed: '/feed',
+      feed: '/sspai',
       imageProxy: '/image-proxy?url=<image_url>',
       clearCache: '/clear-cache',
       stats: '/stats',
@@ -20,7 +20,7 @@ app.get('/', (req, res) => {
   });
 });
 
-app.get('/feed', async (req, res) => {
+app.get('/sspai', async (req, res) => {
   try {
     const baseUrl = `${req.protocol}://${req.get('host')}`;
 

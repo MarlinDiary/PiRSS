@@ -13,7 +13,7 @@ export async function generateFullTextRSS(baseUrl) {
     const feed = new RSS({
       title: 'SSPAI (少数派) - Full Text Feed',
       description: 'Full-text RSS feed for SSPAI articles with image proxy',
-      feed_url: `${baseUrl}/feed`,
+      feed_url: `${baseUrl}/sspai`,
       site_url: config.sspai.baseUrl,
       language: 'zh-CN',
       pubDate: new Date(),
