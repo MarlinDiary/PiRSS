@@ -1,6 +1,11 @@
 import NodeCache from 'node-cache';
 import { config } from './config.js';
 
+export const cacheKeys = {
+  sspaiFullFeed: 'full-rss-feed',
+  hackerNewsFeed: 'hacker-news-feed',
+};
+
 export const feedCache = new NodeCache({
   stdTTL: config.cache.feedTTL,
   checkperiod: 120,

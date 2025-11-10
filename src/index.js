@@ -3,9 +3,27 @@ import { config } from './config.js';
 import { generateFullTextRSS } from './rssGenerator.js';
 import { generateHackerNewsRSS } from './ycombinatorGenerator.js';
 import { fetchImage } from './fetcher.js';
-import { feedCache, imageCache, getOrSet, clearAllCaches, getCacheStats } from './cache.js';
+import {
+  cacheKeys,
+  feedCache,
+  imageCache,
+  getOrSet,
+  clearAllCaches,
+  getCacheStats,
+} from './cache.js';
+import { primeSspaiFeed, startSspaiFeedScheduler } from './scheduler.js';
 
 const app = express();
+let feedRefreshTimer = null;
+
+const resolveServiceBaseUrl = () => {
+  if (config.serviceBaseUrl) {
+    return config.serviceBaseUrl;
+  }
+
+  const hostForUrl = config.host === '0.0.0.0' ? 'localhost' : config.host;
+  return `http://${hostForUrl}:${config.port}`;
+};
 
 app.get('/', (req, res) => {
   res.json({
@@ -28,7 +46,7 @@ app.get('/sspai', async (req, res) => {
 
     const rssXml = await getOrSet(
       feedCache,
-      'full-rss-feed',
+      cacheKeys.sspaiFullFeed,
       () => generateFullTextRSS(baseUrl)
     );
 
@@ -49,7 +67,7 @@ app.get('/ycombinator', async (req, res) => {
 
     const rssXml = await getOrSet(
       feedCache,
-      'hacker-news-feed',
+      cacheKeys.hackerNewsFeed,
       () => generateHackerNewsRSS(baseUrl)
     );
 
@@ -113,15 +131,27 @@ app.get('/stats', (req, res) => {
 
 app.listen(config.port, config.host, () => {
   console.log(`PiRSS listening on http://${config.host}:${config.port}`);
+  const serviceBaseUrl = resolveServiceBaseUrl();
+
+  primeSspaiFeed(serviceBaseUrl).catch(error => {
+    console.error('Failed to prime SSPAI feed cache:', error.message);
+  });
+  feedRefreshTimer = startSspaiFeedScheduler(serviceBaseUrl);
 });
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully...');
   clearAllCaches();
+  if (feedRefreshTimer) {
+    clearInterval(feedRefreshTimer);
+  }
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
   console.log('\nSIGINT received, shutting down gracefully...');
   clearAllCaches();
+  if (feedRefreshTimer) {
+    clearInterval(feedRefreshTimer);
+  }
   process.exit(0);
 });

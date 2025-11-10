@@ -1,6 +1,14 @@
+const toPositiveNumber = (value, fallback) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
+
 export const config = {
   port: process.env.PORT || 3000,
   host: process.env.HOST || '0.0.0.0',
+  serviceBaseUrl: process.env.SERVICE_BASE_URL
+    ? process.env.SERVICE_BASE_URL.replace(/\/$/, '')
+    : null,
 
   sspai: {
     feedUrl: 'https://sspai.com/feed',
@@ -13,9 +21,21 @@ export const config = {
   },
 
   cache: {
-    feedTTL: 1800,
-    articleTTL: 3600,
-    imageTTL: 86400,
+    feedTTL: toPositiveNumber(process.env.FEED_CACHE_TTL, 3600),
+    articleTTL: toPositiveNumber(process.env.ARTICLE_CACHE_TTL, 3600),
+    imageTTL: toPositiveNumber(process.env.IMAGE_CACHE_TTL, 86400),
+  },
+  timeouts: {
+    feed: toPositiveNumber(process.env.FEED_REQUEST_TIMEOUT, 60000),
+    article: toPositiveNumber(process.env.ARTICLE_REQUEST_TIMEOUT, 30000),
+    image: toPositiveNumber(process.env.IMAGE_REQUEST_TIMEOUT, 15000),
+  },
+  scheduler: {
+    feedRefreshEnabled: process.env.FEED_REFRESH_ENABLED !== 'false',
+    feedRefreshIntervalMinutes: toPositiveNumber(
+      process.env.FEED_REFRESH_INTERVAL_MINUTES,
+      60
+    ),
   },
 
   headers: {

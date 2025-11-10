@@ -19,7 +19,7 @@ export async function fetchOriginalRSS() {
     const response = await retryWithBackoff(() =>
       axios.get(config.sspai.feedUrl, {
         headers: config.headers,
-        timeout: 30000,
+        timeout: config.timeouts.feed,
       })
     );
     return response.data;
@@ -37,7 +37,7 @@ export async function fetchHackerNewsRSS() {
           ...config.headers,
           Referer: config.hackernews.baseUrl,
         },
-        timeout: 20000,
+        timeout: config.timeouts.feed,
       })
     );
     return response.data;
@@ -50,7 +50,7 @@ export async function fetchHackerNewsRSS() {
 export async function fetchArticle(url, options = {}) {
   const {
     headers: extraHeaders = {},
-    timeout = 20000,
+    timeout = config.timeouts.article,
   } = options;
 
   const headers = {
@@ -86,7 +86,7 @@ export async function fetchImage(imageUrl) {
         'Referer': 'https://sspai.com/',
       },
       responseType: 'arraybuffer',
-      timeout: 15000,
+      timeout: config.timeouts.image,
     });
 
     return {
