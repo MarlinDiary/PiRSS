@@ -6,6 +6,7 @@ export const cacheKeys = {
   hackerNewsFeed: 'hacker-news-feed',
   oneFeed: 'one-feed',
   kejiquReaderFeed: 'kejiqu-reader-feed',
+  zaihuapdReaderFeed: 'zaihuapd-reader-feed',
   weixinTelegraphFeed: 'weixin-telegraph-feed',
   zhihuTelegraphFeed: 'zhihu-telegraph-feed',
 };
