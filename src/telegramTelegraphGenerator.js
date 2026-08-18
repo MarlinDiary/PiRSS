@@ -39,20 +39,6 @@ function cleanTitle(title) {
   return String(title || '').replace(/\s+\|\s+原文\s*$/, '').trim();
 }
 
-function buildReaderSummary(content, fallbackTitle, maxLength = 280) {
-  const $ = cheerio.load(content || '');
-  $('p, div, li, blockquote, h1, h2, h3, h4, h5, h6, br, figure').each((_, element) => {
-    $(element).append(' ');
-  });
-  const text = $.root().text().replace(/\s+/g, ' ').trim() || cleanTitle(fallbackTitle);
-
-  if (text.length <= maxLength) {
-    return text;
-  }
-
-  return `${text.slice(0, maxLength - 1).trimEnd()}…`;
-}
-
 function findTelegraphUrl(description) {
   const $ = cheerio.load(description || '');
 
@@ -188,46 +174,6 @@ async function getTelegraphDescription(article) {
   };
 }
 
-export function buildTelegramFeedXml(feedConfig, baseUrl, enrichedArticles) {
-  const feedOptions = {
-    title: feedConfig.title,
-    description: feedConfig.description,
-    feed_url: `${baseUrl}${feedConfig.route}`,
-    site_url: feedConfig.baseUrl,
-    language: 'zh-CN',
-    pubDate: new Date(),
-    ttl: 30,
-  };
-
-  const feed = new RSS(feedOptions);
-
-  enrichedArticles.forEach(({ article, content, url }) => {
-    const item = {
-      title: cleanTitle(article.title),
-      description: content,
-      url,
-      guid: article.guid || article.link,
-      date: article.pubDate ? new Date(article.pubDate) : new Date(),
-      author: feedConfig.author,
-    };
-
-    if (feedConfig.readerCompatible) {
-      item.description = buildReaderSummary(content, article.title);
-      item.custom_elements = [
-        {
-          'content:encoded': {
-            _cdata: content,
-          },
-        },
-      ];
-    }
-
-    feed.item(item);
-  });
-
-  return feed.xml({ indent: true });
-}
-
 export async function generateTelegramTelegraphRSS(feedKey, baseUrl) {
   const feedConfig = config.telegramFeeds[feedKey];
 
@@ -244,25 +190,47 @@ export async function generateTelegramTelegraphRSS(feedKey, baseUrl) {
 
   console.log(`Found ${articles.length} items in ${feedKey} Telegram RSS feed`);
 
+  const feed = new RSS({
+    title: feedConfig.title,
+    description: feedConfig.description,
+    feed_url: `${baseUrl}${feedConfig.route}`,
+    site_url: feedConfig.baseUrl,
+    language: 'zh-CN',
+    pubDate: new Date(),
+    ttl: 30,
+  });
+
   const enrichedArticles = await Promise.all(
     articles.map(async article => {
       try {
-        const { description: content, url } = feedConfig.resolveTelegraph === false
-          ? { description: article.description || '', url: article.link }
-          : await getTelegraphDescription(article);
+        const { description, url } = await getTelegraphDescription(article);
 
-        return { article, content, url };
+        return {
+          title: cleanTitle(article.title),
+          description,
+          url,
+          guid: article.guid || article.link,
+          date: article.pubDate ? new Date(article.pubDate) : new Date(),
+          author: feedConfig.author,
+        };
       } catch (error) {
         console.error(`Failed to process Telegram item ${article.link}:`, error.message);
         return {
-          article,
-          content: article.description || '',
+          title: cleanTitle(article.title),
+          description: article.description || '',
           url: article.link,
+          guid: article.guid || article.link,
+          date: article.pubDate ? new Date(article.pubDate) : new Date(),
+          author: feedConfig.author,
         };
       }
     })
   );
 
+  enrichedArticles.forEach(article => {
+    feed.item(article);
+  });
+
   console.log(`${feedKey} Telegram Telegraph RSS feed generated successfully`);
-  return buildTelegramFeedXml(feedConfig, baseUrl, enrichedArticles);
+  return feed.xml({ indent: true });
 }

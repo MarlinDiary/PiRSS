@@ -6,7 +6,6 @@ export const cacheKeys = {
   hackerNewsFeed: 'hacker-news-feed',
   weixinTelegraphFeed: 'weixin-telegraph-feed',
   zhihuTelegraphFeed: 'zhihu-telegraph-feed',
-  jikeReaderFeed: 'jike-reader-feed',
 };
 
 export const buildFeedCacheKey = (key, baseUrl) => {
