@@ -37,6 +37,7 @@ app.get('/', (req, res) => {
       ycombinator: '/ycombinator',
       weixin: '/weixin',
       zhihu: '/zhihu',
+      jike: '/jike',
       imageProxy: '/image-proxy?url=<image_url>',
       clearCache: '/clear-cache',
       stats: '/stats',
@@ -126,6 +127,15 @@ app.get('/zhihu', (req, res) => {
     res,
     'zhihu',
     cacheKeys.zhihuTelegraphFeed
+  );
+});
+
+app.get('/jike', (req, res) => {
+  serveTelegramTelegraphFeed(
+    req,
+    res,
+    'jike',
+    cacheKeys.jikeReaderFeed
   );
 });
 

@@ -36,6 +36,16 @@ export const config = {
       author: '知乎大巴扎',
       route: '/zhihu',
     },
+    jike: {
+      feedUrl: 'https://rsshub.protoyard.com/telegram/channel/jike_collection',
+      baseUrl: 'https://t.me/s/jike_collection',
+      title: '即刻精选',
+      description: 'Reader-compatible full-text RSS feed for 即刻精选',
+      author: '即刻精选',
+      route: '/jike',
+      readerCompatible: true,
+      resolveTelegraph: false,
+    },
   },
 
   cache: {
