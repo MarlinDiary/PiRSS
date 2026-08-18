@@ -19,6 +19,10 @@ export const config = {
     feedUrl: 'https://news.ycombinator.com/rss',
     baseUrl: 'https://news.ycombinator.com',
   },
+  one: {
+    feedUrl: 'https://feedx.net/rss/one.xml',
+    baseUrl: 'http://wufazhuce.com',
+  },
   telegramFeeds: {
     weixin: {
       feedUrl: 'https://rsshub.protoyard.com/telegram/channel/wxbyg',
