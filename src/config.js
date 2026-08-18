@@ -23,6 +23,10 @@ export const config = {
     feedUrl: 'https://feedx.net/rss/one.xml',
     baseUrl: 'http://wufazhuce.com',
   },
+  kejiqu: {
+    feedUrl: 'https://rsshub.protoyard.com/telegram/channel/kejiqu',
+    baseUrl: 'https://t.me/s/kejiqu',
+  },
   telegramFeeds: {
     weixin: {
       feedUrl: 'https://rsshub.protoyard.com/telegram/channel/wxbyg',

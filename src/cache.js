@@ -5,6 +5,7 @@ export const cacheKeys = {
   sspaiFullFeed: 'full-rss-feed',
   hackerNewsFeed: 'hacker-news-feed',
   oneFeed: 'one-feed',
+  kejiquReaderFeed: 'kejiqu-reader-feed',
   weixinTelegraphFeed: 'weixin-telegraph-feed',
   zhihuTelegraphFeed: 'zhihu-telegraph-feed',
 };

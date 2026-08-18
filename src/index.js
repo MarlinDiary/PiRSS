@@ -4,6 +4,7 @@ import { generateFullTextRSS } from './rssGenerator.js';
 import { generateHackerNewsRSS } from './ycombinatorGenerator.js';
 import { generateTelegramTelegraphRSS } from './telegramTelegraphGenerator.js';
 import { generateOneRSS } from './oneGenerator.js';
+import { generateKejiquRSS } from './kejiquGenerator.js';
 import { fetchImage } from './fetcher.js';
 import {
   cacheKeys,
@@ -37,6 +38,7 @@ app.get('/', (req, res) => {
       feed: '/sspai',
       ycombinator: '/ycombinator',
       one: '/one',
+      kejiqu: '/kejiqu',
       weixin: '/weixin',
       zhihu: '/zhihu',
       imageProxy: '/image-proxy?url=<image_url>',
@@ -130,6 +132,28 @@ app.get('/one', async (req, res) => {
     console.error('Error serving ONE RSS feed:', error);
     res.status(500).json({
       error: 'Failed to generate ONE RSS feed',
+      message: error.message,
+    });
+  }
+});
+
+app.get('/kejiqu', async (req, res) => {
+  try {
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const cacheKey = buildFeedCacheKey(cacheKeys.kejiquReaderFeed, baseUrl);
+
+    const rssXml = await getOrSet(
+      feedCache,
+      cacheKey,
+      () => generateKejiquRSS(baseUrl)
+    );
+
+    res.set('Content-Type', 'application/rss+xml; charset=utf-8');
+    res.send(rssXml);
+  } catch (error) {
+    console.error('Error serving Kejiqu RSS feed:', error);
+    res.status(500).json({
+      error: 'Failed to generate Kejiqu RSS feed',
       message: error.message,
     });
   }
