@@ -27,10 +27,6 @@ export const config = {
     feedUrl: 'https://rsshub.protoyard.com/telegram/channel/kejiqu',
     baseUrl: 'https://t.me/s/kejiqu',
   },
-  zaihuapd: {
-    feedUrl: 'https://rsshub.protoyard.com/telegram/channel/zaihuapd',
-    baseUrl: 'https://t.me/s/zaihuapd',
-  },
   telegramFeeds: {
     weixin: {
       feedUrl: 'https://rsshub.protoyard.com/telegram/channel/wxbyg',
