@@ -32,9 +32,9 @@ export async function scrapeArticleContent(url) {
     // Try multiple selectors in order of specificity
     const selectors = [
       // SSPAI specific selectors
-      '.article__main__content',
-      '.article__main__wrapper',
       '.article-body',
+      '.article__main__wrapper',
+      '.article__main__content',
       '.article-detail',
       '.article-content',
       '.content-body',
@@ -174,7 +174,7 @@ export async function scrapeArticleContent(url) {
       throw new Error('Could not find article content');
     }
 
-    const $content = cheerio.load(content);
+    const $content = cheerio.load(content, null, false);
 
     // Clean up unwanted elements before processing
     // Remove emoji/reaction buttons (including Vue components)
